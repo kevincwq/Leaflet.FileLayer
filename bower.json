@@ -1,6 +1,6 @@
 {
   "name": "leaflet-filelayer",
-  "description": "Loads local files (GeoJSON, GPX, KML) into the map using the HTML5 FileReader API",
+  "description": "Loads local files (GeoJSON, GPX, KML, KMZ) into the map using the HTML5 FileReader API",
   "main": "leaflet.filelayer.js",
   "authors": [
     "makinacorpus"

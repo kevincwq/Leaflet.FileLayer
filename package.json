@@ -1,7 +1,7 @@
 {
   "name": "leaflet-filelayer",
   "version": "1.2.0",
-  "description": "Loads local files (GeoJSON, GPX, KML) into the map using the HTML5 FileReader API",
+  "description": "Loads local files (GeoJSON, GPX, KML, KMZ) into the map using the HTML5 FileReader API",
   "keywords": [
     "Leaflet",
     "GIS",
@@ -30,11 +30,14 @@
     "eslint-config-airbnb-base": "^5.0.1",
     "eslint-plugin-import": "^1.12.0",
     "happen": "^0.3.1",
-    "live-server": "^1.1.0",
+    "jszip": "^3.1.5",
+    "leaflet": "^1.4.0",
+    "live-server": "^1.2.1",
     "mocha": "^4.0.1",
     "mocha-phantomjs": "^4.1.0",
     "phantomjs-prebuilt": "^2.1.16",
     "requirejs": "^2.2.0",
-    "sinon": "^1.17.5"
+    "sinon": "^1.17.5",
+    "togeojson": "^0.16.0"
   }
 }

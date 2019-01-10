@@ -1,30 +1,29 @@
 Leaflet.FileLayer
 =================
 
-Loads local files (GeoJSON, JSON, GPX, KML) into the map using the [HTML5 FileReader API](http://caniuse.com/filereader), **without server call** !
+Loads local files (GeoJSON, JSON, GPX, KML, KMZ) into the map using the [HTML5 FileReader API](http://caniuse.com/filereader), **without server call** !
 
 * A simple map control
 * The user can browse a file locally
 * It is read locally (``FileReader``) and converted to GeoJSON
 * And loaded as a layer eventually!
+* Use jszip to support KMZ file
 
-Check out the [demo](http://makinacorpus.github.com/Leaflet.FileLayer/) !
+Check out the [demo](http://kevincwq.github.com/Leaflet.FileLayer/) !
 
-For GPX and KML files, it currently depends on [Tom MacWright's togeojson.js](https://github.com/tmcw/togeojson).
-
-[![Build Status](https://travis-ci.org/makinacorpus/Leaflet.FileLayer.png?branch=master)](https://travis-ci.org/makinacorpus/Leaflet.FileLayer)
+For GPX and KML/KMZ files, it currently depends on [Tom MacWright's togeojson.js](https://github.com/tmcw/togeojson).
 
 Install
 -----
 In order to use this plugin in your app you can either:
 * install it via your favorite package manager:
-    * `npm i leaflet-filelayer`
-    * `bower install git://github.com:makinacorpus/Leaflet.FileLayer.git`
+    * `bower install git://github.com:kevincwq/Leaflet.FileLayer.git`
 * download the repository and import the `leaflet.filelayer.js` file in your app.
 
 Dependencies and compatibilities
 -----
 In order to use this plugin, you need to have both `leaflet` and `togeojson` installed.
+If KMZ is needed, you still need to have `jszip` installed.
 If you're using Leaflet < 1, you need to use the version `0.6.0` of this plugin. After that, Leaflet > 1 is required.
 
 Usage

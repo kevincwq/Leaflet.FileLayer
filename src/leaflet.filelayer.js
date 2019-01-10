@@ -1,5 +1,5 @@
 /*
- * Load files *locally* (GeoJSON, KML, GPX) into the map
+ * Load files *locally* (GeoJSON, KML, KMZ, GPX) into the map
  * using the HTML5 File API.
  *
  * Requires Mapbox's togeojson.js to be in global scope
@@ -32,6 +32,13 @@
                     toGeoJSON = require('togeojson')(root);
                 }
             }
+            if (JSZip === undefined) {
+                if (typeof window !== 'undefined') {
+                    JSZip = require('jszip');
+                } else {
+                    JSZip = require('jszip')(root);
+                }
+            }
             factory(L, toGeoJSON);
             return L;
         };
@@ -54,13 +61,16 @@
                 geojson: this._loadGeoJSON,
                 json: this._loadGeoJSON,
                 gpx: this._convertToGeoJSON,
-                kml: this._convertToGeoJSON
+                kml: this._convertToGeoJSON,
+                kmz: this._convertToGeoJSON
             };
         },
 
         load: function (file, ext) {
             var parser,
-                reader;
+                reader,
+                handler,
+                zipp;
 
             // Check file is defined
             if (this._isParameterMissing(file, 'file')) {
@@ -78,12 +88,13 @@
                 return false;
             }
 
-            // Read selected file using HTML5 File API
-            reader = new FileReader();
-            reader.onload = L.Util.bind(function (e) {
+            function handle(e) {
                 var layer;
                 try {
-                    this.fire('data:loading', { filename: file.name, format: parser.ext });
+                    this.fire('data:loading', {
+                        filename: file.name,
+                        format: parser.ext
+                    });
                     layer = parser.processor.call(this, e.target.result, parser.ext);
                     this.fire('data:loaded', {
                         layer: layer,
@@ -91,14 +102,35 @@
                         format: parser.ext
                     });
                 } catch (err) {
-                    this.fire('data:error', { error: err });
+                    this.fire('data:error', {
+                        error: err
+                    });
                 }
-            }, this);
+            }
+            handler = L.Util.bind(handle, this);
+
             // Testing trick: tests don't pass a real file,
             // but an object with file.testing set to true.
             // This object cannot be read by reader, just skip it.
             if (!file.testing) {
-                reader.readAsText(file);
+                if (parser.ext === 'kmz') {
+                    zipp = new JSZip();
+                    zipp.loadAsync(file).then(function (zip) {
+                        zip.file('doc.kml').async('string').then(function (str) {
+                            var e = {
+                                target: {
+                                    result: str
+                                }
+                            };
+                            handler(e);
+                        });
+                    });
+                } else {
+                    // Read selected file using HTML5 File API
+                    reader = new FileReader();
+                    reader.onload = handler;
+                    reader.readAsText(file);
+                }
             }
             // We return this to ease testing
             return reader;
@@ -107,23 +139,24 @@
         loadMultiple: function (files, ext) {
             var readers = [];
             if (files[0]) {
-              files = Array.prototype.slice.apply(files);
-              while (files.length > 0) {
-                readers.push(this.load(files.shift(), ext));
-              }
+                files = Array.prototype.slice.apply(files);
+                while (files.length > 0) {
+                    readers.push(this.load(files.shift(), ext));
+                }
             }
             // return first reader (or false if no file),
             // which is also used for subsequent loadings
             return readers;
         },
 
+
         loadData: function (data, name, ext) {
             var parser;
             var layer;
 
             // Check required parameters
-            if ((this._isParameterMissing(data, 'data'))
-              || (this._isParameterMissing(name, 'name'))) {
+            if ((this._isParameterMissing(data, 'data')) ||
+                (this._isParameterMissing(name, 'name'))) {
                 return;
             }
 
@@ -140,7 +173,10 @@
 
             // Process data
             try {
-                this.fire('data:loading', { filename: name, format: parser.ext });
+                this.fire('data:loading', {
+                    filename: name,
+                    format: parser.ext
+                });
                 layer = parser.processor.call(this, data, parser.ext);
                 this.fire('data:loaded', {
                     layer: layer,
@@ -148,7 +184,9 @@
                     format: parser.ext
                 });
             } catch (err) {
-                this.fire('data:error', { error: err });
+                this.fire('data:error', {
+                    error: err
+                });
             }
         },
 
@@ -212,9 +250,12 @@
 
         _convertToGeoJSON: function _convertToGeoJSON(content, format) {
             var geojson;
-            // Format is either 'gpx' or 'kml'
+            // Format is either 'gpx' or 'kml/kmz'
             if (typeof content === 'string') {
                 content = (new window.DOMParser()).parseFromString(content, 'text/xml');
+            }
+            if (format === 'kmz') {
+                format = 'kml';
             }
             geojson = toGeoJSON[format](content);
             return this._loadGeoJSON(geojson);
@@ -223,7 +264,7 @@
 
     var FileLayerLoad = L.Control.extend({
         statics: {
-            TITLE: 'Load local file (GPX, KML, GeoJSON)',
+            TITLE: 'Load local file (GPX, KML, KMZ, GeoJSON)',
             LABEL: '&#8965;'
         },
         options: {
@@ -308,7 +349,7 @@
             fileInput.type = 'file';
             fileInput.multiple = 'multiple';
             if (!this.options.formats) {
-                fileInput.accept = '.gpx,.kml,.json,.geojson';
+                fileInput.accept = '.gpx,.kml,.kmz,.json,.geojson';
             } else {
                 fileInput.accept = this.options.formats.join(',');
             }
